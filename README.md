@@ -5,7 +5,7 @@ A Eventhandler that allows you to add Callbacks to CC-Events
 ---
 The intent is to have one single eventhandler which listens to all CC-Events, outside of complex events like `read()`
 You just add your function like this:
-`EventHandler:add(<function>function)`
+`EventHandler:add(<function|thread> param1)`
 
 ## Example
 ```lua
