@@ -1,44 +1,50 @@
-# CC-EventHandler
-A Eventhandler that allows you to add Callbacks to CC-Events
+# stableEventHandler
 
-### Work in progess
+#### A stable Eventhandler that allows you to add Callbacks to CC-Events
+
 ---
-The intent is to have one single eventhandler which listens to all CC-Events, outside of complex events like `read()`
-You just add your function like this:
-`EventHandler:add(<function|thread> param1)`
+
+As long as this script is on the top level, there will not be any "Voided" Events which are usally removed while listening to a different, specific Event.
+
+This is done by having 2 seperate coroutines, one which listens to events and one which executes the Callbacks. Therefore the listener gets **all** the Events and the Queue can implement things like `os.sleep(x)` without voiding other events for the listener while doing so.
+
+---
 
 ## Example
+
 ```lua
-local eHandler = require("lib/CC-EventHandler")
+-- Requirements
+---@class stableEventHandler
+local stableEventHandler = require("./stableEventHandler")
 
-local function timer1()
-    local timerID = os.startTimer(3)
-    while true do
-        event = {os.pullEvent("timer")}
-        if event[2] == timerID then
-            print("Timer 3")
-            --dostuff
-            timerID = os.startTimer(3)
-        end
-    end
-end
-local function timer2()
-    local timerID = os.startTimer(6)
-    while true do
-        event = {os.pullEvent("timer")}
-        if event[2] == timerID then
-            print("Timer 6")
-            --dostuff
-            timerID = os.startTimer(6)
-        end
-    end
+
+--checks if the triggert Event is the correct Event
+local function checkFunction(event, parameters)
+    return event[1] == "timer" and event[2] == parameters
 end
 
-local function main()
-    eHandler:add(timer1)
-    eHandler:add(timer2)
+--the function that should be run after the Event triggers
+local function runAfterEvent(stableEvent, parameters)
+    print('Event name: ' .. stableEvent.luaEvent[1])
+    print('Paramter: ' .. parameters)
+    stableEventHandler:removeCallback(stableEvent.eventID)
+    stableEventHandler.listen = false
+    os.queueEvent('Stop')
 end
 
-eHandler:add(main)
-eHandler:start()
+-- Example: Timer
+local timer_id = os.startTimer(1)
+
+-- Adding the Callback to the Event
+local stableEvent = stableEventHandler:addCallback(
+    checkFunction,
+    runAfterEvent,
+    nil,
+    timer_id,
+    true
+)
+
+stableEventHandler:start()
 ```
+
+![Executed Example](Images/Executed.png)
